@@ -1,5 +1,9 @@
 package com.wipro.web.crawler.model;
 
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  * A page model that represent a webpage.
  * 
@@ -10,13 +14,12 @@ public class Page
 {
 
   private final String url;
-  private final String parentUrl;
   private String title;
+  private Set<String> hrefs = new TreeSet<>();;
 
-  public Page(String url, String parentUrl)
+  public Page(String url)
   {
     this.url = url;
-    this.parentUrl = parentUrl;
   }
 
   public void setTitle(String title)
@@ -29,14 +32,25 @@ public class Page
     return url;
   }
 
-  public String getParentUrl()
-  {
-    return parentUrl;
-  }
-
   public String getTitle()
   {
     return title;
+  }
+
+  public void addHref(String url)
+  {
+    hrefs.add(url);
+  }
+
+  public Set<String> getHrefs()
+  {
+    return Collections.unmodifiableSet(hrefs);
+  }
+
+  @Override
+  public String toString()
+  {
+    return url;
   }
 
 }

@@ -1,18 +1,22 @@
 package com.wipro.web.crawler.model;
 
-import java.util.List;
+import java.util.Set;
 
 public interface TreeNode<T>
 {
 
   TreeNode<T> getParent();
 
-  List<TreeNode<T>> getChildren();
+  void addChild(TreeNode<T> child);
+
+  Set<TreeNode<T>> getChildren();
 
   int getChildrenCount();
 
   boolean isLeaf();
 
   T getModel();
+
+  void setModel(T model);
 
 }

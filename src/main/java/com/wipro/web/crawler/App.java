@@ -1,7 +1,7 @@
 package com.wipro.web.crawler;
 
-import com.wipro.web.crawler.model.Page;
-import com.wipro.web.crawler.model.TreeNode;
+import com.wipro.web.crawler.view.ConsoleRenderer;
+import com.wipro.web.crawler.view.Renderer;
 
 /**
  * The entry-point of the crawler application.
@@ -17,19 +17,24 @@ public class App
       System.exit(0);
     }
 
-    String url = args[0].startsWith("http://") ? args[0] : "http://" + args[0];
+    String url = args[0].startsWith("http") ? args[0] : "http://" + args[0];
 
-    TreeNode<Page> siteMap = crawlWeb(url);
-  }
+    if (!url.endsWith("/"))
+    {
+      url = url + "/";
+    }
 
-  public static TreeNode<Page> crawlWeb(String url)
-  {
-    // TODO implement this
-    return null;
+    Crawler crawler = new CrawlerImpl(url, new PageServiceImpl());
+
+    crawler.crawl(null);
+
+    Renderer renderer = new ConsoleRenderer();
+    renderer.render(crawler.getSiteMapRootTree());
   }
 
   public static void printUsage()
   {
-    System.out.println("Usage: java App <domain> \nExample java App example.com");
+    System.out.println("Usage: java App <domain>" + "\nExample" + "\n\tjava App example.com"
+        + "\n\tjava App http://example.com");
   }
 }
