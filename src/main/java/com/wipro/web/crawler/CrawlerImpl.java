@@ -24,8 +24,6 @@ public class CrawlerImpl implements Crawler
 
   Set<String> crawledPages;
 
-  ExecutorService executor;
-
   private int numberOfThreads = 3;
 
   public CrawlerImpl(String baseURL, PageService pageService)
@@ -55,25 +53,37 @@ public class CrawlerImpl implements Crawler
 
     rootTreeNode = createTreeNode(startPage, null);
 
-    Page page = rootTreeNode.getModel();
-    crawledPages.add(page.getUrl());
+    startChildCrawlExecutor(rootTreeNode);
+  }
 
-    executor = Executors.newFixedThreadPool(numberOfThreads);
+  private void startChildCrawlExecutor(TreeNode<Page> parentNode)
+  {
+    Page page = parentNode.getModel();
 
-    Set<String> hrefs = page.getHrefs();
-    for (String url : hrefs)
+    if (canCrawl(page.getUrl()))
     {
-      executor.submit(() -> addChild(url, rootTreeNode));
-    }
+      crawledPages.add(page.getUrl());
 
-    executor.shutdown();
-    try
-    {
-      executor.awaitTermination(5, TimeUnit.HOURS);
-    }
-    catch (InterruptedException e)
-    {
-      e.printStackTrace();
+      Set<String> hrefs = page.getHrefs();
+      if (!hrefs.isEmpty())
+      {
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+
+        for (String url : hrefs)
+        {
+          executor.submit(() -> addChild(url, parentNode));
+        }
+
+        executor.shutdown();
+        try
+        {
+          executor.awaitTermination(5, TimeUnit.HOURS);
+        }
+        catch (InterruptedException e)
+        {
+          e.printStackTrace();
+        }
+      }
     }
 
   }
@@ -95,24 +105,6 @@ public class CrawlerImpl implements Crawler
     }
   }
 
-  private void crawlChildNode(TreeNode<Page> node)
-  {
-    Page page = node.getModel();
-    if (!canCrawl(page.getUrl()))
-    {
-      return;
-    }
-
-    crawledPages.add(page.getUrl());
-
-    Set<String> hrefs = page.getHrefs();
-    for (String url : hrefs)
-    {
-      addChild(url, node);
-    }
-
-  }
-
   private boolean canCrawl(String url)
   {
     // we are not crawling if url is outside of the base url and/or if it
@@ -124,6 +116,7 @@ public class CrawlerImpl implements Crawler
   private TreeNode<Page> addChild(String url, TreeNode<Page> parent)
   {
 
+    // avoid duplicate roots
     if (crawledPages.contains(url))
     {
       return null;
@@ -134,7 +127,7 @@ public class CrawlerImpl implements Crawler
       TreeNode<Page> child = createTreeNode(url, parent);
       parent.addChild(child);
 
-      crawlChildNode(child);
+      startChildCrawlExecutor(child);
 
       return child;
     }
